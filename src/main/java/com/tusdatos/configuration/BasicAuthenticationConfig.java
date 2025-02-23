@@ -11,7 +11,10 @@ import static org.springframework.web.reactive.function.client.ExchangeFilterFun
 public class BasicAuthenticationConfig {
 
     @Bean
-    public ExchangeFilterFunction basicAuth(@Value("${configuration.tusdatos.user}") String user, @Value("${configuration.tusdatos.password}") String password) {
+    public ExchangeFilterFunction basicAuth(
+            @Value("${configuration.tusdatos.user}") String user,
+            @Value("${configuration.tusdatos.password}") String password
+    ) {
         return basicAuthentication(user, password);
     }
 }
