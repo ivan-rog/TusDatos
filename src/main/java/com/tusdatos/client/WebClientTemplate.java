@@ -19,7 +19,7 @@ public class WebClientTemplate {
                 .bodyToMono(responseType);
     }
 
-    protected <T> Mono<T> post(final String uri, Object body, final Class<T> responseType) {
+    protected <T, V> Mono<T> post(final String uri, V body, final Class<T> responseType) {
         return webClient
                 .post()
                 .uri(uri)
