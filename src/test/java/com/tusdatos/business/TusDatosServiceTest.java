@@ -3,6 +3,8 @@ package com.tusdatos.business;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tusdatos.client.TusDatosWebClient;
 import com.tusdatos.dto.request.LaunchRequestDTO;
+import com.tusdatos.dto.response.JobStatusResponseDTO;
+import com.tusdatos.dto.response.LaunchResponseDTO;
 import com.tusdatos.utils.JacksonUtils;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 
@@ -40,10 +43,12 @@ class TusDatosServiceTest {
     }
 
     @Test
-    void when_the_document_type_is_cc() {
+    void when_the_document_type_is_cc() throws JsonProcessingException {
         this.mockWebServer.enqueue(this.mockLaunchResponse());
         this.mockWebServer.enqueue(this.mockResultResponse());
-        this.tusDatosService.launch(this.mockLaunchRequestCC()).block();
+        StepVerifier.create(this.tusDatosService.launch(this.mockLaunchRequestCC()).log())
+                .expectNextMatches(jobStatusResponseDTO -> "finalizado".equals(jobStatusResponseDTO.getStatus()))
+                .verifyComplete();
     }
 
     private LaunchRequestDTO mockLaunchRequestCC() {
@@ -61,14 +66,18 @@ class TusDatosServiceTest {
         return new MockResponse()
                 .setResponseCode(200)
                 .addHeader("Content-Type", "application/json")
-                .setBody("{\n" +
-                        "    \"email\": \"usuario@pruebas.com\",\n" +
-                        "    \"doc\": 111,\n" +
-                        "    \"jobid\": \"6460fc34-4154-43db-9438-8c5a059304c0\",\n" +
-                        "    \"nombre\": \"MIGUEL FERNANDO PEREZ GOMEZ\",\n" +
-                        "    \"typedoc\": \"CC\",\n" +
-                        "    \"validado\": true\n" +
-                        "}");
+                .setBody(this.launchBody());
+    }
+
+    private String launchBody(){
+        return "{\n" +
+                "    \"email\": \"usuario@pruebas.com\",\n" +
+                "    \"doc\": 111,\n" +
+                "    \"jobid\": \"6460fc34-4154-43db-9438-8c5a059304c0\",\n" +
+                "    \"nombre\": \"MIGUEL FERNANDO PEREZ GOMEZ\",\n" +
+                "    \"typedoc\": \"CC\",\n" +
+                "    \"validado\": true\n" +
+                "}";
     }
 
     private MockResponse mockResultResponse() {
@@ -135,4 +144,5 @@ class TusDatosServiceTest {
                         "    \"validado\": true\n" +
                         "}");
     }
+
 }

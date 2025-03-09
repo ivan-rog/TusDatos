@@ -1,5 +1,6 @@
 package com.tusdatos.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tusdatos.dto.enums.DocumentTypes;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class JobStatusResponseDTO {
 
     private String cedula;
