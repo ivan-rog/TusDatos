@@ -3,7 +3,9 @@ package com.tusdatos.client;
 import com.tusdatos.dto.request.LaunchRequestDTO;
 import com.tusdatos.dto.response.JobStatusResponseDTO;
 import com.tusdatos.dto.response.LaunchResponseDTO;
+import com.tusdatos.dto.response.ReportJsonResponseDTO;
 import com.tusdatos.dto.response.RetryJobResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,12 +14,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.List;
 
 @Service
+@Slf4j
 public class TusDatosWebClient extends WebClientTemplate {
 
     @Value("${configuration.tusdatos.endpoint.launch}")
@@ -29,6 +32,9 @@ public class TusDatosWebClient extends WebClientTemplate {
     @Value("${configuration.tusdatos.endpoint.job.retry}")
     private String endpointJobRetry;
 
+    @Value("${configuration.tusdatos.endpoint.report.json}")
+    private String endpointReportJson;
+
     private final List<String> sources = List.of("interpol");
 
     public TusDatosWebClient(WebClient webClient) {
@@ -38,6 +44,13 @@ public class TusDatosWebClient extends WebClientTemplate {
     @Autowired
     public TusDatosWebClient(final WebClient webClient, ExchangeFilterFunction authentication, @Value("${configuration.tusdatos.url}") String urlBase) {
         this(webClient.mutate().baseUrl(urlBase).filter(authentication).build());
+    }
+
+    public Mono<ReportJsonResponseDTO> processDocuments(final LaunchRequestDTO launchRequestDTO) {
+        return this.launch(launchRequestDTO).
+                flatMap(this::jobStatus).
+                flatMap(this::retryJob).
+                flatMap(this::reportJob);
     }
 
     public Mono<LaunchResponseDTO> launch(final LaunchRequestDTO launchRequestDTO) {
@@ -78,14 +91,16 @@ public class TusDatosWebClient extends WebClientTemplate {
         return Mono.just(jobStatusResponseDTO);
     }
 
-    public Mono<Tuple2<String, String>> reportJob(final JobStatusResponseDTO jobStatusResponseDTO) {
-        return Mono.zip(Mono.just(""), Mono.just(""));
+    public Mono<ReportJsonResponseDTO> reportJob(final JobStatusResponseDTO jobStatusResponseDTO) {
+        var uri = UriComponentsBuilder.fromUriString(this.endpointReportJson)
+                .encode()
+                .buildAndExpand(jobStatusResponseDTO.getId())
+                .toUri();
+        return this.get(uri.toString(), ReportJsonResponseDTO.class);
     }
-
 
     public boolean validateSource(List<String> errors){
         return errors.stream().anyMatch(this.sources::contains);
     }
-
 
 }

@@ -2,7 +2,7 @@ package com.tusdatos.business;
 
 import com.tusdatos.client.TusDatosWebClient;
 import com.tusdatos.dto.request.LaunchRequestDTO;
-import com.tusdatos.dto.response.JobStatusResponseDTO;
+import com.tusdatos.dto.response.ReportJsonResponseDTO;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -15,10 +15,9 @@ public class TusDatosService {
         this.tusDatosWebClient = tusDatosWebClient;
     }
 
-    public Mono<JobStatusResponseDTO> launch(final LaunchRequestDTO launchRequestDTO) {
-        return tusDatosWebClient.launch(launchRequestDTO).log().
-                flatMap(this.tusDatosWebClient::jobStatus).log().
-                flatMap(this.tusDatosWebClient::retryJob).log();
+    public void launch(final LaunchRequestDTO launchRequestDTO) {
+        this.tusDatosWebClient.processDocuments(launchRequestDTO).
+                subscribe(System.out::println);
     }
 
 }

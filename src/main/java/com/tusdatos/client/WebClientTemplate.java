@@ -1,8 +1,13 @@
 package com.tusdatos.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
+
+@Slf4j
 public class WebClientTemplate {
 
     private final WebClient webClient;
@@ -12,19 +17,28 @@ public class WebClientTemplate {
     }
 
     protected <T> Mono<T> get(final String uri, final Class<T> responseType) {
-        return webClient
+        return this.additional(this.webClient
                 .get()
                 .uri(uri)
                 .retrieve()
-                .bodyToMono(responseType);
+                .bodyToMono(responseType)
+        );
     }
 
     protected <T, V> Mono<T> post(final String uri, V body, final Class<T> responseType) {
-        return webClient
+        return this.additional(this.webClient
                 .post()
                 .uri(uri)
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(responseType);
+                .bodyToMono(responseType)
+        );
+    }
+
+    public Mono additional(Mono<?> request){
+        return request.transform(mono ->
+                mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(15)))
+                        .doOnError(ex -> log.error("Error: ", ex)).log()
+        );
     }
 }

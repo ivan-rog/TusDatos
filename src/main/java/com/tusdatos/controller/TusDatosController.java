@@ -20,7 +20,7 @@ public class TusDatosController {
 
     @GetMapping("/launch")
     public String lauch() throws JsonProcessingException {
-        this.tusDatosService.launch(JacksonUtils.jsonToObject("{ \"doc\": 111, \"typedoc\": \"CC\", \"fechaE\": \"01/12/2014\" }", LaunchRequestDTO.class)).subscribe(jobStatusResponseDTO -> System.out.println(jobStatusResponseDTO));
+        this.tusDatosService.launch(JacksonUtils.jsonToObject("{ \"doc\": 111, \"typedoc\": \"CC\", \"fechaE\": \"01/12/2014\" }", LaunchRequestDTO.class));
         return "Launch Tus";
     }
 }
