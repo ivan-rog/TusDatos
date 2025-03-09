@@ -16,9 +16,9 @@ public class TusDatosService {
     }
 
     public Mono<JobStatusResponseDTO> launch(final LaunchRequestDTO launchRequestDTO) {
-        return tusDatosWebClient.launch(launchRequestDTO).
-                flatMap(this.tusDatosWebClient::jobStatus).
-                flatMap(this.tusDatosWebClient::retryJob);
+        return tusDatosWebClient.launch(launchRequestDTO).log().
+                flatMap(this.tusDatosWebClient::jobStatus).log().
+                flatMap(this.tusDatosWebClient::retryJob).log();
     }
 
 }
