@@ -1,5 +1,6 @@
 package com.tusdatos.client;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -37,7 +38,9 @@ public class WebClientTemplate {
 
     public Mono additional(Mono<?> request){
         return request.transform(mono ->
-                mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(15)))
+                mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5)).filter(
+                        throwable -> throwable.getCause() instanceof ReadTimeoutException
+                        ))
                         .doOnError(ex -> log.error("Error: ", ex)).log()
         );
     }

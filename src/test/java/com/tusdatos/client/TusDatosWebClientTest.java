@@ -1,18 +1,20 @@
 package com.tusdatos.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.tusdatos.business.TusDatosService;
+import com.tusdatos.configuration.WebClientConfig;
 import com.tusdatos.dto.request.LaunchRequestDTO;
 import com.tusdatos.utils.JacksonUtils;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.Exceptions;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -24,12 +26,15 @@ class TusDatosWebClientTest {
 
     private TusDatosWebClient tusDatosWebClient;
     private MockWebServer mockWebServer;
+    private WebClientConfig webClientConfig;
 
     @BeforeEach
     void setUp() throws IOException {
+        this.webClientConfig = new WebClientConfig();
         this.mockWebServer = new MockWebServer();
         this.mockWebServer.start();
-        this.tusDatosWebClient = new TusDatosWebClient(WebClient.create(this.mockWebServer.url("/").toString()));
+        var webClient = webClientConfig.createWebClient().mutate().baseUrl(this.mockWebServer.url("/").toString()).build();
+        this.tusDatosWebClient = new TusDatosWebClient(webClient);
         ReflectionTestUtils.setField(this.tusDatosWebClient, "endpointLaunch", "/api/launch");
         ReflectionTestUtils.setField(this.tusDatosWebClient, "endpointJobStatus", "/api/results/{jobkey}");
         ReflectionTestUtils.setField(this.tusDatosWebClient, "endpointJobRetry", "/api/retry/{id}?typedoc={typedoc}");
@@ -39,6 +44,22 @@ class TusDatosWebClientTest {
     @AfterEach
     void tearDown() throws IOException {
         this.mockWebServer.shutdown();
+    }
+
+    @Test
+    void when_the_service_timeout() throws IOException {
+        this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+        StepVerifier.create(this.tusDatosWebClient.processDocuments(this.mockLaunchRequestCC()))
+                .consumeErrorWith(throwable -> assertTrue(Exceptions.isRetryExhausted(throwable)))
+                .verify();
+    }
+
+    @Test
+    void when_the_service_responds_with_a_400_error_code() throws IOException {
+        this.mockWebServer.enqueue(new MockResponse().setResponseCode(400));
+        StepVerifier.create(this.tusDatosWebClient.processDocuments(this.mockLaunchRequestCC()))
+                .consumeErrorWith(throwable -> assertTrue(((WebClientResponseException)throwable).getStatusCode().is4xxClientError()))
+                .verify();
     }
 
     @Test

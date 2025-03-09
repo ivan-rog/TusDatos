@@ -19,25 +19,29 @@ public class WebClientConfig {
         return ConnectionProvider
                 .builder("custom-http-client")
                 .maxConnections(50)
-                .maxIdleTime(Duration.ofSeconds(20))
-                .maxLifeTime(Duration.ofSeconds(60))
-                .pendingAcquireTimeout(Duration.ofSeconds(60))
+                .maxIdleTime(Duration.ofSeconds(10))
+                .maxLifeTime(Duration.ofSeconds(20))
+                .pendingAcquireTimeout(Duration.ofSeconds(30))
                 .evictInBackground(Duration.ofSeconds(120))
                 .build();
     }
 
     private HttpClient createHttpClient() {
         return HttpClient.create(getConnectionProvider())
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 40_000)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000)
                 .doOnConnected(
                         connection ->
-                                connection.addHandlerLast(new ReadTimeoutHandler(40))
-                                        .addHandlerLast(new WriteTimeoutHandler(40)));
+                                connection.addHandlerLast(new ReadTimeoutHandler(5))
+                                        .addHandlerLast(new WriteTimeoutHandler(5)))
+                .responseTimeout(Duration.ofSeconds(5));
     }
 
     @Bean
     public WebClient createWebClient() {
-        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(createHttpClient())).build();
+        return WebClient.
+                builder().
+                clientConnector(new ReactorClientHttpConnector(createHttpClient())).
+                build();
     }
 
 }

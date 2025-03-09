@@ -3,8 +3,6 @@ package com.tusdatos.business;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tusdatos.client.TusDatosWebClient;
 import com.tusdatos.dto.request.LaunchRequestDTO;
-import com.tusdatos.dto.response.JobStatusResponseDTO;
-import com.tusdatos.dto.response.LaunchResponseDTO;
 import com.tusdatos.utils.JacksonUtils;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -15,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.test.StepVerifier;
 
 import java.io.IOException;
 
