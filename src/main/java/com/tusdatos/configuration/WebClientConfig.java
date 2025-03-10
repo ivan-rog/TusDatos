@@ -3,16 +3,20 @@ package com.tusdatos.configuration;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
 import java.time.Duration;
 
 @Configuration
+@Slf4j
 public class WebClientConfig {
 
     private ConnectionProvider getConnectionProvider() {
@@ -40,8 +44,32 @@ public class WebClientConfig {
     public WebClient createWebClient() {
         return WebClient.
                 builder().
+                filters(
+                        exchangeFilterFunctions -> {
+                            exchangeFilterFunctions.add(this.logRequest());
+                            exchangeFilterFunctions.add(this.logResponse());
+                        }
+                ).
                 clientConnector(new ReactorClientHttpConnector(createHttpClient())).
                 build();
+    }
+
+    private ExchangeFilterFunction logRequest() {
+        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            log.info("Request: {} {}", clientRequest.method(), clientRequest.url());
+            clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.info("header request {} - {}", name, value)));
+            return Mono.just(clientRequest);
+        });
+    }
+
+    private ExchangeFilterFunction logResponse() {
+        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+            log.info("Response: {} {}", clientResponse.request().getMethod(), clientResponse.request().getURI().toString());
+            clientResponse.headers().
+                    asHttpHeaders().forEach((name, values) -> values.forEach(value -> log.info("header response {} - {}", name, value)));
+            log.info("Status Code: {}", clientResponse.statusCode());
+            return Mono.just(clientResponse);
+        });
     }
 
 }
