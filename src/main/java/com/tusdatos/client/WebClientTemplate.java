@@ -41,7 +41,7 @@ public class WebClientTemplate {
                 mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5)).filter(
                                 throwable -> throwable.getCause() instanceof ReadTimeoutException
                         ))
-                        .doOnError(ex -> log.error("Error: ", ex)).log()
+                        .doOnError(ex -> log.error("Error: ", ex))
         );
     }
 }

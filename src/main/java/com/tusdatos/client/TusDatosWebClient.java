@@ -52,11 +52,11 @@ public class TusDatosWebClient extends WebClientTemplate {
                 flatMap(this::reportJob);
     }
 
-    public Mono<LaunchResponseDTO> launch(final LaunchRequestDTO launchRequestDTO) {
+    private Mono<LaunchResponseDTO> launch(final LaunchRequestDTO launchRequestDTO) {
         return this.post(this.endpointLaunch, launchRequestDTO, LaunchResponseDTO.class);
     }
 
-    public Mono<JobStatusResponseDTO> jobStatus(final LaunchResponseDTO launchResponseDTO) {
+    private Mono<JobStatusResponseDTO> jobStatus(final LaunchResponseDTO launchResponseDTO) {
         var uri = UriComponentsBuilder.
                 fromUriString(this.endpointJobStatus).
                 encode().buildAndExpand(launchResponseDTO.getJobId()).toUri();
@@ -66,7 +66,7 @@ public class TusDatosWebClient extends WebClientTemplate {
                 last().timeout(Duration.ofMinutes(2));
     }
 
-    public Mono<JobStatusResponseDTO> jobStatus(final RetryJobResponseDTO retryJobResponseDTO) {
+    private Mono<JobStatusResponseDTO> jobStatus(final RetryJobResponseDTO retryJobResponseDTO) {
         var uri = UriComponentsBuilder.
                 fromUriString(this.endpointJobStatus).
                 encode().buildAndExpand(retryJobResponseDTO.getJobId()).toUri();
@@ -76,7 +76,7 @@ public class TusDatosWebClient extends WebClientTemplate {
                 last().timeout(Duration.ofMinutes(2));
     }
 
-    public Mono<JobStatusResponseDTO> retryJob(final JobStatusResponseDTO jobStatusResponseDTO) {
+    private Mono<JobStatusResponseDTO> retryJob(final JobStatusResponseDTO jobStatusResponseDTO) {
         if(jobStatusResponseDTO.isError() && validateSource(jobStatusResponseDTO.getErrors())) {
             var uri =  UriComponentsBuilder.fromUriString(this.endpointJobRetry).encode().
                     buildAndExpand(jobStatusResponseDTO.getId(), jobStatusResponseDTO.getCedula()).toUri();
@@ -90,7 +90,7 @@ public class TusDatosWebClient extends WebClientTemplate {
         return Mono.just(jobStatusResponseDTO);
     }
 
-    public Mono<ReportJsonResponseDTO> reportJob(final JobStatusResponseDTO jobStatusResponseDTO) {
+    private Mono<ReportJsonResponseDTO> reportJob(final JobStatusResponseDTO jobStatusResponseDTO) {
         var uri = UriComponentsBuilder.fromUriString(this.endpointReportJson)
                 .encode()
                 .buildAndExpand(jobStatusResponseDTO.getId())
@@ -98,7 +98,7 @@ public class TusDatosWebClient extends WebClientTemplate {
         return this.get(uri.toString(), ReportJsonResponseDTO.class);
     }
 
-    public boolean validateSource(List<String> errors){
+    private boolean validateSource(List<String> errors){
         return errors.stream().anyMatch(this.sources::contains);
     }
 

@@ -3,9 +3,11 @@ package com.tusdatos.business;
 import com.tusdatos.client.TusDatosWebClient;
 import com.tusdatos.dto.request.LaunchRequestDTO;
 import com.tusdatos.dto.response.ReportJsonResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class TusDatosService {
 
     private final TusDatosWebClient tusDatosWebClient;
@@ -20,9 +22,11 @@ public class TusDatosService {
     }
 
     private void onSuccess(ReportJsonResponseDTO reportJsonResponseDTO) {
+        log.info(reportJsonResponseDTO.toString());
     }
 
     private void onError(Throwable throwable) {
+        log.error(throwable.getMessage());
     }
 
 }
