@@ -13,7 +13,7 @@ public class WebClientTemplate {
 
     private final WebClient webClient;
 
-    public WebClientTemplate (final WebClient webClient) {
+    public WebClientTemplate(final WebClient webClient) {
         this.webClient = webClient;
     }
 
@@ -36,10 +36,10 @@ public class WebClientTemplate {
         );
     }
 
-    public Mono additional(Mono<?> request){
+    public <T> Mono<T> additional(Mono<T> request) {
         return request.transform(mono ->
                 mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5)).filter(
-                        throwable -> throwable.getCause() instanceof ReadTimeoutException
+                                throwable -> throwable.getCause() instanceof ReadTimeoutException
                         ))
                         .doOnError(ex -> log.error("Error: ", ex)).log()
         );
