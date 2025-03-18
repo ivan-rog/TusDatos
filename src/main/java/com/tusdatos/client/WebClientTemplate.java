@@ -38,9 +38,14 @@ public class WebClientTemplate {
 
     public <T> Mono<T> additional(Mono<T> request) {
         return request.transform(mono ->
-                mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5)).filter(
-                                throwable -> throwable.getCause() instanceof ReadTimeoutException
-                        ))
+                mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5))
+                                .filter(throwable -> throwable instanceof TimeoutException ||
+                                        throwable.getCause() instanceof TimeoutException)
+                                .filter(throwable -> throwable instanceof ConnectTimeoutException)
+                                .filter(throwable ->
+                                        throwable instanceof WebClientResponseException &&
+                                                ((WebClientResponseException) throwable).getStatusCode().is5xxServerError())
+                        )
                         .doOnError(ex -> log.error("Error: ", ex))
         );
     }
