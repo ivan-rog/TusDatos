@@ -22,11 +22,11 @@ public class TusDatosService {
     }
 
     private void onSuccess(ReportJsonResponseDTO reportJsonResponseDTO) {
-        log.info(reportJsonResponseDTO.toString());
+        log.info("Respuesta TUS DATOS: {}", reportJsonResponseDTO.toString());
     }
 
     private void onError(Throwable throwable) {
-        log.error(throwable.getMessage());
+        log.error("Error TUS_DATOS: {}", throwable.getMessage(), throwable);
     }
 
 }
