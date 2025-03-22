@@ -39,20 +39,17 @@ public class WebClientTemplate {
     public <T> Mono<T> additional(Mono<T> request) {
         return request.transform(mono ->
                 mono.retryWhen(Retry.backoff(3, Duration.ofSeconds(5))
-                                .filter(throwable ->
-                                        {
-                                            return switch (throwable) {
+                                .filter(throwable -> switch (throwable) {
                                                 case ConnectTimeoutException ignored -> true;
                                                 case TimeoutException ignored -> true;
                                                 case WebClientResponseException webClientResponseException ->
-                                                        webClientResponseException.getCause() instanceof TimeoutException
-                                                                || webClientResponseException.getStatusCode().is5xxServerError();
+                                                        webClientResponseException.getStatusCode().is5xxServerError();
                                                 case WebClientRequestException webClientRequestException ->
                                                         webClientRequestException.getCause() instanceof TimeoutException;
                                                 default -> false;
-                                            };
-                                        }
+                                            }
                                 ))
-                        .doOnError(ex -> log.error("Error: ", ex))
+                        .doOnError(ex -> log.error("Error: ", ex)).log()
         );
+    }
 }
