@@ -13,11 +13,15 @@ public class LaunchRequestDTO {
     @JsonProperty("doc")
     @JsonAlias("doc")
     private String documentNumber;
+    
     @JsonProperty("typedoc")
     @JsonAlias("typedoc")
     private DocumentTypes documentTypes;
+    
     @JsonProperty("fechaE")
     @JsonAlias("fechaE")
     private String expirationDate;
+    
+    private boolean force;
 
 }
